@@ -1,0 +1,37 @@
+# YOLO11m Training Configuration for Stack Detection
+
+model:
+  name: "yolo11m.pt"
+  imgsz: 640
+  epochs: 10
+  patience: 50
+  batch: 16
+  optimizer: "AdamW"
+  lr0: 0.001
+  lrf: 0.01  # Final learning rate is lr0 * lrf (0.001 * 0.01 = 1e-5)
+  cos_lr: True # Cosine Annealing
+
+# Custom Augmentations (Simulating lighting, occlusion, perspective)
+augmentations:
+  hsv_h: 0.015 # Image HSV-Hue augmentation
+  hsv_s: 0.7   # Image HSV-Saturation augmentation
+  hsv_v: 0.4   # Image HSV-Value augmentation
+  degrees: 0.0 # Random rotation
+  translate: 0.1 # Random translation
+  scale: 0.5   # Random scaling
+  shear: 0.0   # Shear
+  perspective: 0.001 # Perspective transform for varying camera angles
+  flipud: 0.0  # Do not flip up-down
+  fliplr: 0.5  # Flip left-right
+  mosaic: 1.0  # Mosaic augmentation
+  mixup: 0.1   # Mixup augmentation
+  erasing: 0.4 # Random erasing for occlusion simulation
+
+# Thresholds
+thresholds:
+  conf: 0.45
+  iou: 0.6
+  
+# Dataset
+data:
+  path: "../data.yaml" # Relative to training script or absolute

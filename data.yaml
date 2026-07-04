@@ -1,0 +1,7 @@
+path: c:/Users/banka/Documents/egg-tray-counter/dataset
+train: train/images
+val: val/images
+test: test/images
+
+names:
+  0: egg_tray

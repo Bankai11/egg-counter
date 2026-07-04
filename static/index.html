@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egg Tray Counter AI</title>
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="glass-bg-decor decor-1"></div>
+    <div class="glass-bg-decor decor-2"></div>
+    <div class="glass-bg-decor decor-3"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-circle-nodes"></i>
+                    <div class="logo-glow"></div>
+                </div>
+                <div class="logo-text">
+                    <h1>OVALIS <span>AI</span></h1>
+                    <p>Egg Tray Object Detection & Counting</p>
+                </div>
+            </div>
+            
+            <div class="status-panel">
+                <div class="status-indicator">
+                    <span class="status-dot online" id="statusDot"></span>
+                    <span class="status-text" id="statusText">Connecting...</span>
+                </div>
+                <div class="system-meta" id="systemMeta">
+                    <i class="fa-solid fa-microchip"></i> <span id="deviceName">Detecting hardware...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="app-workspace">
+            <!-- Sidebar Controls -->
+            <section class="sidebar-panel">
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-sliders"></i>
+                        <h2>Detection Settings</h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- Confidence Slider -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Confidence Threshold</span>
+                                <span class="val-badge" id="confVal">0.25</span>
+                            </div>
+                            <input type="range" id="confSlider" min="0.05" max="0.95" step="0.05" value="0.25" class="custom-slider">
+                            <p class="control-help">Minimum confidence to report a tray detection.</p>
+                        </div>
+                        
+                        <!-- IOU Slider -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>IOU NMS Threshold</span>
+                                <span class="val-badge" id="iouVal">0.45</span>
+                            </div>
+                            <input type="range" id="iouSlider" min="0.05" max="0.95" step="0.05" value="0.45" class="custom-slider">
+                            <p class="control-help">Overlap threshold for Non-Maximum Suppression.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card glass-card mode-card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <h2>Analysis Mode</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="mode-selector">
+                            <button class="mode-btn active" id="btnSingleMode">
+                                <i class="fa-solid fa-image"></i>
+                                <span>Single Image</span>
+                            </button>
+                            <button class="mode-btn" id="btnFolderMode">
+                                <i class="fa-solid fa-folder-open"></i>
+                                <span>Batch Folder</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card glass-card info-card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <h2>Model Details</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <span class="info-label">Target Class:</span>
+                            <span class="info-valuehighlight">egg_tray</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Active Model:</span>
+                            <span class="info-value" id="modelWeights">yolov8n.pt</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Input Size:</span>
+                            <span class="info-value">640x640px</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main Content Area -->
+            <section class="content-panel">
+                <!-- Single Image Mode View -->
+                <div class="workspace-mode-view active" id="singleModeView">
+                    <div class="card glass-card full-height-card">
+                        <div class="card-header space-between">
+                            <div class="title-with-icon">
+                                <i class="fa-solid fa-photo-film"></i>
+                                <h2>Interactive Tray Detection</h2>
+                            </div>
+                            <button class="btn btn-primary" id="btnUploadTrigger">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Upload Image
+                            </button>
+                            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                        </div>
+                        
+                        <div class="card-body main-display-body">
+                            <!-- Drag & Drop Zone -->
+                            <div class="upload-dropzone" id="dropzone">
+                                <div class="dropzone-content">
+                                    <div class="dropzone-icon">
+                                        <i class="fa-solid fa-box-open"></i>
+                                    </div>
+                                    <h3>Drag & Drop Egg Tray Image</h3>
+                                    <p>Supports PNG, JPG, JPEG, WebP (Max 15MB)</p>
+                                    <span class="browse-link">or browse file system</span>
+                                </div>
+                            </div>
+
+                            <!-- Interactive Dashboard Result -->
+                            <div class="detection-result-container" id="detectionResult" style="display: none;">
+                                <div class="result-images-grid">
+                                    <div class="image-box">
+                                        <h3>Original</h3>
+                                        <div class="img-wrapper">
+                                            <img id="originalPreview" src="" alt="Original Image">
+                                        </div>
+                                    </div>
+                                    <div class="image-box highlighted">
+                                        <h3>Detections</h3>
+                                        <div class="img-wrapper">
+                                            <img id="annotatedPreview" src="" alt="Annotated Image">
+                                            <div class="loading-overlay" id="imageLoading">
+                                                <div class="spinner"></div>
+                                                <p>Running YOLO inference...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="results-meta-grid">
+                                    <!-- Big Count Card -->
+                                    <div class="stat-count-card">
+                                        <p class="stat-label">Total Trays Detected</p>
+                                        <h3 id="resultCount">0</h3>
+                                        <div class="stat-icon-glow"><i class="fa-solid fa-egg"></i></div>
+                                    </div>
+
+                                    <!-- Bounding Box Table -->
+                                    <div class="boxes-table-container">
+                                        <h3>Detected Bounding Boxes</h3>
+                                        <div class="table-scroll">
+                                            <table class="custom-table" id="boxesTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Class</th>
+                                                        <th>Coordinates (x1, y1, x2, y2)</th>
+                                                        <th>Confidence</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Dynamic rows -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Folder Batch Mode View -->
+                <div class="workspace-mode-view" id="folderModeView">
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-folder-tree"></i>
+                            <h2>Batch Folder Scanning</h2>
+                        </div>
+                        <div class="card-body">
+                            <p class="section-desc">Process multiple tray images located in a server folder directory. Annotated images will be saved under an <code>outputs/</code> folder inside the target folder.</p>
+                            
+                            <div class="folder-input-bar">
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-folder-closed folder-icon"></i>
+                                    <input type="text" id="folderPathInput" placeholder="e.g. C:/path/to/my/egg_tray_images" class="custom-input">
+                                </div>
+                                <button class="btn btn-glow" id="btnScanFolder">Run Batch Analysis</button>
+                            </div>
+
+                            <!-- Progress & Loader -->
+                            <div class="batch-progress-container" id="batchProgress" style="display: none;">
+                                <div class="progress-header">
+                                    <span id="progressStatus">Analysing images...</span>
+                                    <span id="progressPct">0%</span>
+                                </div>
+                                <div class="progress-bar-wrapper">
+                                    <div class="progress-bar-fill" id="progressBarFill"></div>
+                                </div>
+                            </div>
+
+                            <!-- Batch Results Summary -->
+                            <div class="batch-results-summary" id="batchResults" style="display: none;">
+                                <div class="summary-stats-grid">
+                                    <div class="summary-stat-box">
+                                        <i class="fa-solid fa-images"></i>
+                                        <div>
+                                            <h4>Total Images</h4>
+                                            <p id="batchTotalImages">0</p>
+                                        </div>
+                                    </div>
+                                    <div class="summary-stat-box">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        <div>
+                                            <h4>Processed</h4>
+                                            <p id="batchProcessedImages">0</p>
+                                        </div>
+                                    </div>
+                                    <div class="summary-stat-box count-stat">
+                                        <i class="fa-solid fa-egg"></i>
+                                        <div>
+                                            <h4>Trays Counted</h4>
+                                            <p id="batchTotalTrays">0</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="batch-details-section">
+                                    <div class="files-list-container">
+                                        <h3>Processed Images</h3>
+                                        <div class="files-list-scroll">
+                                            <ul class="files-list" id="batchFilesList">
+                                                <!-- Dynamic entries -->
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="file-preview-panel">
+                                        <h3>Image Output Preview</h3>
+                                        <div class="preview-panel-content">
+                                            <div class="preview-placeholder" id="previewPlaceholder">
+                                                <i class="fa-solid fa-image"></i>
+                                                <p>Select a processed image from the list to see output preview</p>
+                                            </div>
+                                            <div class="preview-display" id="previewDisplay" style="display: none;">
+                                                <img id="batchSelectedImage" src="" alt="Batch Image Preview">
+                                                <div class="preview-metadata">
+                                                    <span class="preview-filename" id="previewFilename">image.jpg</span>
+                                                    <span class="preview-count" id="previewCount">Trays: 2</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Frontend logic script -->
+    <script src="index.js" defer></script>
+</body>
+</html>

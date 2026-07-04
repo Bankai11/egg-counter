@@ -1,0 +1,16 @@
+venv/
+__pycache__/
+*.pyc
+*.pt
+*.zip
+*.mp4
+dataset/
+dataset_pilot/
+datasets/
+egg_tray_training/
+eggcounterdataset/
+eggtrainset/
+exports/
+outputs/
+reports/
+weights/
